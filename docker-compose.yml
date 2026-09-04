@@ -164,6 +164,10 @@ services:
       # Sólo se toca para apuntar a otro servidor compatible con la API de
       # OpenAI. Vacío = api.deepseek.com.
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-}
+      # Cuánto espera al modelo antes de darse por vencido. El proveedor de
+      # turno manda: un catálogo compartido arranca en frío y tarda más que
+      # una API dedicada. Vacío = 90 s (el valor del código).
+      IA_TIMEOUT_MS: ${IA_TIMEOUT_MS:-}
     networks:
       - chasqui_assistant
 

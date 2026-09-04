@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { consultarUna } from '@/lib/db';
-import { esUuid } from '@/lib/clinico';
+import { esUuid } from '@/lib/formato';
 import {
   COOKIE_SESION,
   DURACION_COOKIE_SEG,

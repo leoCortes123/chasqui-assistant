@@ -36,6 +36,39 @@ END;
 $$;
 
 -- ---------------------------------------------------------------------
+-- Formato de los textos que se le mandan a una persona
+--
+-- Viven en el núcleo porque los usan la tarjeta de confirmación del
+-- asistente y el portal por igual. En Chasqui Pet estaban repartidos entre
+-- el módulo de turnos y el de inventario, que aquí no existen.
+-- ---------------------------------------------------------------------
+
+-- Escape mínimo para los mensajes con formato HTML (Telegram y WhatsApp).
+CREATE OR REPLACE FUNCTION esc(txt text) RETURNS text
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT replace(replace(replace(COALESCE(txt, ''), '&', '&amp;'), '<', '&lt;'), '>', '&gt;');
+$$;
+
+-- Pesos colombianos: punto como separador de miles, sin decimales.
+--
+-- El `G` de `to_char` toma el separador del locale del servidor, que en el
+-- contenedor es el de C y devuelve coma: «$172,000» en vez de «$172.000». A
+-- un cliente colombiano eso le lee como ciento setenta y dos, y en una
+-- cotización esa diferencia se nota. Se fija la coma y se cambia por punto,
+-- que es determinista y no depende de con qué locale se levantó Postgres.
+CREATE OR REPLACE FUNCTION pesos(v numeric) RETURNS text
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT '$' || replace(to_char(round(COALESCE(v, 0)), 'FM999,999,999,999'), ',', '.');
+$$;
+
+-- Cantidades sin relleno: «2», «0.5»; nunca «2.000» ni «2.».
+-- (FM suprime los ceros de la derecha pero deja el punto colgando.)
+CREATE OR REPLACE FUNCTION fmt_cant(v numeric) RETURNS text
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT rtrim(trim(to_char(COALESCE(v, 0), 'FM999999990.999')), '.');
+$$;
+
+-- ---------------------------------------------------------------------
 -- Configuración del sistema (§11.2: editable desde el portal)
 -- ---------------------------------------------------------------------
 CREATE TABLE config (
@@ -102,12 +135,12 @@ CREATE TRIGGER consultorio_touch BEFORE UPDATE ON consultorio
 -- ---------------------------------------------------------------------
 CREATE TABLE evento_auditoria (
   id           bigserial PRIMARY KEY,
-  entidad      text NOT NULL,          -- 'turno', 'lote', 'cuenta', ...
+  entidad      text NOT NULL,          -- 'cita', 'paciente', 'conversacion', ...
   entidad_id   text,                   -- texto: hay PK uuid y bigint
-  accion       text NOT NULL,          -- 'crear','llamar','confirmar_pago', ...
+  accion       text NOT NULL,          -- 'crear','agendar','cancelar', ...
   usuario_id   uuid,                   -- FK lógica; sin REFERENCES para no bloquear borrados de demo
   canal        text NOT NULL DEFAULT 'sistema'
-                 CHECK (canal IN ('telegram','web','sistema','job')),
+                 CHECK (canal IN ('whatsapp','telegram','simulador','web','sistema','job')),
   datos_antes  jsonb,
   datos_despues jsonb,
   detalle      text,

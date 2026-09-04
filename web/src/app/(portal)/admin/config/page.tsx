@@ -2,13 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { consultar } from '@/lib/db';
 import { exigirPermiso } from '@/lib/sesion';
-import {
-  FilaParametro,
-  FilaTarifaEditable,
-  NuevaTarifa,
-  type FilaConfig,
-  type FilaTarifa,
-} from './formularios';
+import { FilaParametro, type FilaConfig } from './formularios';
 import estilos from '../../vistas.module.css';
 import tabla from '../../admin.module.css';
 
@@ -29,15 +23,18 @@ interface Consultorio {
 
 /**
  * Configuración operativa (§11.2). Todo lo de aquí son filas de tablas
- * que el sistema lee en caliente: cambiar `timeout_llamado_seg` o el
- * precio de una consulta no exige desplegar nada ni reiniciar el bot.
+ * que el sistema lee en caliente: cambiar el nombre de la clínica o los
+ * parámetros del asistente no exige desplegar nada ni reiniciar el bot.
+ *
+ * Las tarifas de estudios tienen su propia vista en la fase 2: la regla de
+ * precio depende del día (L–S vs. domingos y festivos) y no cabe en una
+ * tabla de clave/valor.
  */
 export default async function PaginaConfig() {
   await exigirPermiso('config.editar', '/admin/config');
 
-  const [parametros, tarifas, consultorios] = await Promise.all([
+  const [parametros, consultorios] = await Promise.all([
     consultar<FilaConfig>('SELECT * FROM config_listado()'),
-    consultar<FilaTarifa>('SELECT * FROM tarifas_listado()'),
     consultar<Consultorio>(
       'SELECT id, nombre, activo, orden FROM consultorio ORDER BY orden, nombre',
     ),
@@ -71,32 +68,6 @@ export default async function PaginaConfig() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className={tabla.seccion}>
-        <h2 className={estilos.titulo}>Tarifas</h2>
-        <p className={estilos.subtitulo}>
-          Lo que el bot ofrece al armar una cuenta. «Valor libre» es lo que se cobra
-          por peso o por acuerdo: el bot pregunta cuánto en vez de suponerlo.
-        </p>
-        <div className={tabla.desplazable}>
-          <table className={tabla.tabla}>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Servicio</th>
-                <th className={tabla.derecha}>Usos</th>
-                <th>Nombre, valor y estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tarifas.map((t) => (
-                <FilaTarifaEditable key={t.tarifa_id} fila={t} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <NuevaTarifa />
       </section>
 
       <section className={tabla.seccion}>

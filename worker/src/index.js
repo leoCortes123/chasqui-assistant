@@ -51,7 +51,6 @@ pool.on('error', (err) => {
 // --- Estado del proceso ------------------------------------------------------
 let apagando = false;
 const enVuelo = new Set(); // promesas de tareas que aún no terminan
-let avisoTablaAvisos = false; // para no repetir la advertencia en cada pasada
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -59,40 +58,7 @@ const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
 // Contexto que reciben los manejadores
 // ---------------------------------------------------------------------------
 
-/**
- * Reserva el aviso `tipo` para un turno. Devuelve true si el aviso es nuevo
- * (hay que enviarlo) y false si ya se había enviado.
- *
- * Es un INSERT ... ON CONFLICT DO NOTHING: atómico, así que dos workers que
- * miren la misma cola al tiempo no mandan el mismo mensaje dos veces.
- * Si la tabla todavía no está migrada (ver worker/sql/010_aviso_turno.sql),
- * se avisa una vez y se sigue sin deduplicar: es preferible un aviso repetido
- * a no avisarle a nadie que ya viene su turno.
- */
-async function marcarAviso(turnoId, tipoAviso) {
-  try {
-    const { rowCount } = await pool.query(
-      `INSERT INTO aviso_turno_enviado (turno_id, tipo)
-       VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-      [turnoId, tipoAviso],
-    );
-    return rowCount > 0;
-  } catch (err) {
-    if (err.code === '42P01') {
-      if (!avisoTablaAvisos) {
-        avisoTablaAvisos = true;
-        log.aviso(
-          'la tabla aviso_turno_enviado no existe: los avisos de turno pueden repetirse. ' +
-            'Integre worker/sql/010_aviso_turno.sql en db/migrations/.',
-        );
-      }
-      return true;
-    }
-    throw err;
-  }
-}
-
-const ctx = { db: pool, log, marcarAviso };
+const ctx = { db: pool, log };
 
 // ---------------------------------------------------------------------------
 // Procesamiento de una tarea

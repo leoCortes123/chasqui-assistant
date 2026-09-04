@@ -1,0 +1,7 @@
+# Netlify y Cloudflare Pages leen este archivo.
+# Refuerza el noindex del HTML a nivel de servidor: la propuesta es
+# confidencial y no debe aparecer en ningún buscador.
+/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer

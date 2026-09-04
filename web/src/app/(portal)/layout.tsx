@@ -26,19 +26,8 @@ export default async function LayoutPortal({
 
   const enlaces: { href: string; texto: string }[] = [{ href: '/', texto: 'Panel' }];
 
-  if (puede(sesion, 'pacientes.ver')) {
-    enlaces.push({ href: '/consultas', texto: 'Consultas' });
-    enlaces.push({ href: '/pacientes', texto: 'Pacientes' });
-  }
-  if (puede(sesion, 'inventario.ver')) {
-    enlaces.push({ href: '/inventario', texto: 'Inventario' });
-  }
-  if (puede(sesion, 'proveedores.ver')) {
-    enlaces.push({ href: '/compras', texto: 'Compras' });
-  }
-  if (puede(sesion, 'reportes.operativos') || puede(sesion, 'reportes.financieros')) {
-    enlaces.push({ href: '/reportes', texto: 'Reportes' });
-  }
+  // Las vistas de conversaciones, agenda y pacientes llegan en las fases 2 y
+  // 4. Hasta entonces el portal solo tiene panel y administración.
   if (
     puede(sesion, 'usuarios.gestionar') ||
     puede(sesion, 'config.editar') ||

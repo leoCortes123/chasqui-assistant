@@ -75,3 +75,15 @@ export function hoyBogota(): string {
 export function primeroDeMes(): string {
   return `${hoyBogota().slice(0, 7)}-01`;
 }
+
+const RE_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Valida un UUID antes de mandarlo a la base. Vivía en `lib/clinico.ts`, que
+ * era el módulo clínico heredado de Chasqui Pet; lo usan las rutas de ingreso
+ * al portal, que no tienen nada de clínico.
+ */
+export function esUuid(valor: string): boolean {
+  return RE_UUID.test(valor);
+}

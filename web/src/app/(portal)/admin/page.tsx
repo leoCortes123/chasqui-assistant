@@ -20,7 +20,7 @@ interface Salud {
   tareas: { pendientes: number; procesando: number; fallidas: number; atraso_seg: number };
   telegram: { ultimo_update: string | null; sin_procesar: number };
   sesiones_activas: number;
-  caja_abierta: number;
+  conversaciones: { abiertas: number; con_humano: number };
 }
 
 export default async function PaginaAdmin() {
@@ -40,7 +40,7 @@ export default async function PaginaAdmin() {
     {
       href: '/admin/config',
       titulo: 'Configuración operativa',
-      detalle: 'Tiempos de la cola, umbrales de alerta, tarifas y consultorios.',
+      detalle: 'Nombre de la clínica, parámetros del asistente y consultorios.',
       permiso: 'config.editar',
     },
     {
@@ -52,7 +52,7 @@ export default async function PaginaAdmin() {
     {
       href: '/admin/tareas',
       titulo: 'Tareas asíncronas',
-      detalle: 'Avisos, recibos y alertas que no se pudieron entregar, con opción de reintentar.',
+      detalle: 'Respuestas, avisos y recordatorios que no se pudieron entregar, con opción de reintentar.',
       permiso: 'sistema.operar',
     },
   ].filter((x) => puede(sesion, x.permiso));
@@ -87,8 +87,8 @@ export default async function PaginaAdmin() {
               <span className={tabla.indicadorEtiqueta}>Sesiones del portal</span>
             </div>
             <div className={tabla.indicador}>
-              <span className={tabla.indicadorValor}>{numero(s.caja_abierta)}</span>
-              <span className={tabla.indicadorEtiqueta}>Cajas abiertas</span>
+              <span className={tabla.indicadorValor}>{numero(s.conversaciones.abiertas)}</span>
+              <span className={tabla.indicadorEtiqueta}>Conversaciones abiertas</span>
             </div>
           </div>
           <p className={estilos.subtitulo} style={{ marginTop: '0.75rem' }}>

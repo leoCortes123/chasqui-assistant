@@ -129,25 +129,6 @@ export async function guardarConfig(_previo: Resultado | null, datos: FormData):
   return fila?.r ?? FALLO;
 }
 
-export async function guardarTarifa(_previo: Resultado | null, datos: FormData): Promise<Resultado> {
-  const sesion = await exigirPermiso('config.editar', '/admin/config');
-
-  const campos = {
-    nombre: texto(datos, 'nombre'),
-    valor_sugerido: Number(texto(datos, 'valor_sugerido').replace(',', '.')) || 0,
-    permite_valor_libre: datos.get('permite_valor_libre') === 'on',
-    activa: datos.get('activa') === 'on',
-  };
-
-  const fila = await consultarUna<{ r: Resultado }>(
-    'SELECT guardar_tarifa($1, $2::uuid, $3::jsonb) AS r',
-    [sesion.usuario_id, texto(datos, 'tarifa_id') || null, JSON.stringify(campos)],
-  );
-
-  revalidatePath('/admin/config');
-  return fila?.r ?? FALLO;
-}
-
 // --- Tareas ----------------------------------------------------------------
 
 export async function operarTarea(_previo: Resultado | null, datos: FormData): Promise<Resultado> {
